@@ -115,11 +115,6 @@ function createMainWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
-  // [デバッグビルド] DevTools を自動で開く。原因判明後に外す。
-  mainWindow.webContents.once('did-finish-load', () => {
-    mainWindow.webContents.openDevTools({ mode: 'detach' });
-  });
-
   // レンダラーのコンソールログをメインプロセスの stdout に転送 (デバッグ用)
   mainWindow.webContents.on('console-message', (_e, level, message, line, sourceId) => {
     const levels = ['verbose', 'info', 'warning', 'error'];
