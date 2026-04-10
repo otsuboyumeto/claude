@@ -102,6 +102,11 @@ xattr -cr "$DEST" 2>/dev/null || true
 
 print_ok "配置完了: $DEST"
 
+# Spotlightが2つ拾わないよう、ビルド中間物は消す
+print_step "ビルド中間物 (dist/) を掃除"
+rm -rf dist
+print_ok "dist/ を削除しました"
+
 echo ""
 echo "============================================"
 printf "  ${GREEN}🎉 セットアップ完了${NC}\n"
