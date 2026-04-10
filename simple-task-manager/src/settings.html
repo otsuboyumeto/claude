@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self';"
+    />
+    <title>設定</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Klee+One:wght@400;600&family=Yuji+Mai&family=Kalam:wght@400;700&family=Shadows+Into+Light&family=Zen+Kurenaido&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 20px 24px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue',
+          sans-serif;
+        background: #fdfcf8;
+        color: #3a2c1a;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      h1 {
+        margin: 0 0 16px;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      .group {
+        margin-bottom: 18px;
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        color: #8a7358;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      input[type='text'],
+      input[type='password'],
+      input[type='number'],
+      select {
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 14px;
+        border: 1px solid #d9cbb3;
+        border-radius: 8px;
+        background: #fff;
+        color: #3a2c1a;
+        outline: none;
+        -webkit-user-select: text;
+        user-select: text;
+        font-family: inherit;
+      }
+      input:focus,
+      select:focus {
+        border-color: #e85d3c;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+      }
+      .row > * {
+        flex: 1;
+      }
+      .preview {
+        margin-top: 10px;
+        padding: 12px;
+        border-radius: 8px;
+        background: #fffcf0;
+        border: 1.5px dashed #d9cbb3;
+        min-height: 52px;
+        display: flex;
+        align-items: center;
+      }
+      .buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+      }
+      button {
+        padding: 8px 16px;
+        border-radius: 20px;
+        border: none;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      button.primary {
+        background: #e85d3c;
+        color: #fff;
+      }
+      button.primary:hover {
+        background: #d14d2e;
+      }
+      button.secondary {
+        background: #eee;
+        color: #3a2c1a;
+      }
+      .hint {
+        font-size: 11px;
+        color: #8a7358;
+        margin-top: 4px;
+        line-height: 1.5;
+      }
+      .hint a {
+        color: #e85d3c;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+      .saved {
+        font-size: 12px;
+        color: #2a8f3e;
+        margin-right: auto;
+        align-self: center;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .saved.show {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>設定</h1>
+
+    <div class="group">
+      <label for="font-family">フォント</label>
+      <select id="font-family">
+        <option value="'Klee One', 'Caveat', cursive">
+          Klee One (手書き風・日本語)
+        </option>
+        <option value="'Zen Kurenaido', 'Caveat', cursive">
+          Zen Kurenaido (手書き風・日本語)
+        </option>
+        <option value="'Yuji Mai', 'Caveat', cursive">
+          Yuji Mai (筆風・日本語)
+        </option>
+        <option value="'Caveat', cursive">Caveat (手書き風・英数)</option>
+        <option value="'Kalam', cursive">Kalam (手書き風・英数)</option>
+        <option value="'Shadows Into Light', cursive">
+          Shadows Into Light (英数)
+        </option>
+        <option
+          value="'Hiragino Maru Gothic ProN', 'Hiragino Sans', sans-serif"
+        >
+          Hiragino 丸ゴ (標準・日本語)
+        </option>
+        <option value="-apple-system, 'Helvetica Neue', sans-serif">
+          システムフォント
+        </option>
+      </select>
+    </div>
+
+    <div class="row">
+      <div class="group">
+        <label for="font-size">フォントサイズ</label>
+        <input type="number" id="font-size" min="12" max="48" step="1" />
+      </div>
+      <div class="group">
+        <label for="opacity">背景の不透明度 (0.5〜1.0)</label>
+        <input type="number" id="opacity" min="0.5" max="1" step="0.05" />
+      </div>
+    </div>
+
+    <div class="preview" id="preview">プレビュー: 今日やることを書こう</div>
+
+    <div class="group" style="margin-top: 18px">
+      <label for="api-key">Anthropic API Key</label>
+      <input type="password" id="api-key" placeholder="sk-ant-..." />
+      <p class="hint">
+        Claude API でタスクを分解します。キーは
+        <code>~/.simple-tasks/config.json</code> に保存されます。
+        <a id="console-link"
+          >console.anthropic.com で取得</a
+        >
+      </p>
+    </div>
+
+    <div class="group">
+      <label for="model">モデル</label>
+      <select id="model">
+        <option value="claude-haiku-4-5-20251001">
+          Claude Haiku 4.5 (速くて安い - おすすめ)
+        </option>
+        <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (高精度)</option>
+        <option value="claude-opus-4-6">Claude Opus 4.6 (最高精度)</option>
+      </select>
+    </div>
+
+    <div class="buttons">
+      <span id="saved" class="saved">保存しました</span>
+      <button class="secondary" id="cancel">閉じる</button>
+      <button class="primary" id="save">保存</button>
+    </div>
+
+    <script src="settings.js"></script>
+  </body>
+</html>

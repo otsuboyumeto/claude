@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self';"
+    />
+    <title>やること</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Klee+One:wght@400;600&family=Yuji+Mai&family=Kalam:wght@400;700&family=Shadows+Into+Light&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- ドラッグ可能なタイトルバー -->
+      <header class="titlebar">
+        <div class="titlebar-drag">
+          <span class="title">やること</span>
+        </div>
+        <div class="titlebar-buttons">
+          <button
+            id="pin-btn"
+            class="icon-btn"
+            title="常に最前面の切り替え"
+            aria-label="常に最前面の切り替え"
+          >
+            📌
+          </button>
+          <button
+            id="settings-btn"
+            class="icon-btn"
+            title="設定"
+            aria-label="設定"
+          >
+            ⚙
+          </button>
+          <button
+            id="minimize-btn"
+            class="icon-btn"
+            title="最小化"
+            aria-label="最小化"
+          >
+            －
+          </button>
+          <button
+            id="close-btn"
+            class="icon-btn close"
+            title="閉じる"
+            aria-label="閉じる"
+          >
+            ×
+          </button>
+        </div>
+      </header>
+
+      <!-- 入力欄 -->
+      <section class="input-area">
+        <textarea
+          id="task-input"
+          rows="2"
+          placeholder="やりたいことを話し言葉でどうぞ。例: 牛乳と卵買って、あと提案書も書く"
+        ></textarea>
+        <div class="input-actions">
+          <span id="status" class="status"></span>
+          <button id="add-btn" class="primary">追加 ⌘+Enter</button>
+        </div>
+      </section>
+
+      <!-- タスクリスト -->
+      <main class="list-area">
+        <ul id="task-list" class="task-list"></ul>
+        <p id="empty" class="empty">まだタスクはありません。上に書いてね。</p>
+      </main>
+
+      <!-- フッター -->
+      <footer class="footer">
+        <span id="count" class="count"></span>
+        <button id="clear-done" class="text-btn">完了を消す</button>
+      </footer>
+    </div>
+
+    <script src="renderer.js"></script>
+  </body>
+</html>
