@@ -2,7 +2,38 @@
 // - タスク一覧の描画/追加/完了/削除/並び替え
 // - 自然言語入力を Claude に投げて分解
 
+console.log('[renderer] script start, window.api =', typeof window.api);
+
+// 失敗時に画面上に視認できる形で出す用
+function showFatalBanner(msg) {
+  let el = document.getElementById('fatal-banner');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'fatal-banner';
+    el.style.cssText =
+      'position:fixed;top:0;left:0;right:0;z-index:9999;background:#c0392b;color:#fff;padding:6px 10px;font:12px -apple-system,sans-serif;white-space:pre-wrap;word-break:break-all;';
+    document.body && document.body.prepend(el);
+  }
+  el.textContent = msg;
+}
+
+window.addEventListener('error', (e) => {
+  console.error('[renderer] error:', e.error || e.message);
+  showFatalBanner('JS Error: ' + (e.error?.stack || e.error?.message || e.message));
+});
+window.addEventListener('unhandledrejection', (e) => {
+  console.error('[renderer] unhandledrejection:', e.reason);
+  showFatalBanner(
+    'Promise Rejection: ' + (e.reason?.stack || e.reason?.message || String(e.reason))
+  );
+});
+
 const api = window.api;
+if (!api) {
+  showFatalBanner(
+    'preload が読み込まれていません。window.api が undefined です。DevToolsのConsoleタブも確認してください。'
+  );
+}
 
 const state = {
   tasks: [],
@@ -24,16 +55,26 @@ const $closeBtn = document.getElementById('close-btn');
 
 // ---- 初期化 ----
 async function init() {
-  state.config = await api.loadConfig();
-  applyConfig(state.config);
+  if (!api) {
+    console.error('[renderer] init aborted: api undefined');
+    return;
+  }
+  try {
+    state.config = await api.loadConfig();
+    applyConfig(state.config);
 
-  state.tasks = await api.loadTasks();
-  render();
+    state.tasks = await api.loadTasks();
+    render();
 
-  api.onConfigUpdated((cfg) => {
-    state.config = cfg;
-    applyConfig(cfg);
-  });
+    api.onConfigUpdated((cfg) => {
+      state.config = cfg;
+      applyConfig(cfg);
+    });
+    console.log('[renderer] init OK, tasks =', state.tasks.length);
+  } catch (err) {
+    console.error('[renderer] init failed:', err);
+    showFatalBanner('init failed: ' + (err?.stack || err?.message || String(err)));
+  }
 }
 
 function applyConfig(cfg) {
@@ -226,22 +267,47 @@ async function handleAdd() {
 }
 
 // ---- イベント ----
-$addBtn.addEventListener('click', handleAdd);
+// ラップしてクリックが届いているか必ず console に出すヘルパ
+function safeClick(name, fn) {
+  return async (e) => {
+    console.log('[renderer] click:', name);
+    try {
+      await fn(e);
+    } catch (err) {
+      console.error(`[renderer] ${name} failed:`, err);
+      setStatus(`${name} エラー: ${err.message || err}`, true);
+    }
+  };
+}
+
+$addBtn.addEventListener('click', safeClick('add', handleAdd));
 $input.addEventListener('keydown', (e) => {
   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
     e.preventDefault();
     handleAdd();
   }
 });
-$clearDone.addEventListener('click', clearDone);
-$settingsBtn.addEventListener('click', () => api.openSettings());
-$minimizeBtn.addEventListener('click', () => api.minimizeWindow());
-$closeBtn.addEventListener('click', () => api.closeWindow());
-$pinBtn.addEventListener('click', async () => {
-  const pinned = await api.toggleAlwaysOnTop();
-  $pinBtn.classList.toggle('pinned', pinned);
-  $pinBtn.title = pinned ? '常に最前面: ON' : '常に最前面: OFF';
-});
+$clearDone.addEventListener('click', safeClick('clearDone', clearDone));
+$settingsBtn.addEventListener(
+  'click',
+  safeClick('settings', () => api.openSettings())
+);
+$minimizeBtn.addEventListener(
+  'click',
+  safeClick('minimize', () => api.minimizeWindow())
+);
+$closeBtn.addEventListener(
+  'click',
+  safeClick('close', () => api.closeWindow())
+);
+$pinBtn.addEventListener(
+  'click',
+  safeClick('pin', async () => {
+    const pinned = await api.toggleAlwaysOnTop();
+    $pinBtn.classList.toggle('pinned', pinned);
+    $pinBtn.title = pinned ? '常に最前面: ON' : '常に最前面: OFF';
+  })
+);
 
 // 起動時は最前面がONなのでアイコンを点灯
 $pinBtn.classList.add('pinned');

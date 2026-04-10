@@ -3,10 +3,17 @@
 // - タスク/設定のJSONファイル読み書きをハンドリング
 // - 自然言語 → タスク分解のリクエストを Claude API に投げる
 
-const { app, BrowserWindow, ipcMain, shell, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, screen, Menu, globalShortcut } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
+
+// 二重起動防止
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+  process.exit(0);
+}
 
 const DATA_DIR = path.join(os.homedir(), '.simple-tasks');
 const TASKS_PATH = path.join(DATA_DIR, 'tasks.json');
@@ -93,11 +100,12 @@ function createMainWindow() {
     resizable: true,
     hasShadow: true,
     skipTaskbar: false,
-    title: 'Simple Task Manager',
+    title: 'やること',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      devTools: true,
     },
   });
 
@@ -106,6 +114,23 @@ function createMainWindow() {
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
+
+  // [デバッグビルド] DevTools を自動で開く。原因判明後に外す。
+  mainWindow.webContents.once('did-finish-load', () => {
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
+  });
+
+  // レンダラーのコンソールログをメインプロセスの stdout に転送 (デバッグ用)
+  mainWindow.webContents.on('console-message', (_e, level, message, line, sourceId) => {
+    const levels = ['verbose', 'info', 'warning', 'error'];
+    console.log(`[renderer:${levels[level] || level}] ${message} (${sourceId}:${line})`);
+  });
+  mainWindow.webContents.on('preload-error', (_e, preloadPath, error) => {
+    console.error(`[preload-error] ${preloadPath}:`, error);
+  });
+  mainWindow.webContents.on('render-process-gone', (_e, details) => {
+    console.error('[render-process-gone]', details);
+  });
 
   mainWindow.on('close', () => {
     if (mainWindow) {
@@ -265,8 +290,70 @@ ipcMain.handle('ai:parse-tasks', async (_e, inputText) => {
 
 // ---- app lifecycle ----
 
+// 二重起動しようとした時に既存ウィンドウをフォーカス
+app.on('second-instance', () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore();
+    mainWindow.show();
+    mainWindow.focus();
+  }
+});
+
 app.whenReady().then(() => {
   ensureDataDir();
+
+  // macOS デフォルトメニューを設定 (Cmd+Opt+I で DevTools を開けるように)
+  const isMac = process.platform === 'darwin';
+  const template = [
+    ...(isMac
+      ? [
+          {
+            label: app.name,
+            submenu: [
+              { role: 'about' },
+              { type: 'separator' },
+              { role: 'services' },
+              { type: 'separator' },
+              { role: 'hide' },
+              { role: 'hideOthers' },
+              { role: 'unhide' },
+              { type: 'separator' },
+              { role: 'quit' },
+            ],
+          },
+        ]
+      : []),
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' },
+      ],
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+      ],
+    },
+    {
+      label: 'Window',
+      submenu: [{ role: 'minimize' }, { role: 'close' }],
+    },
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+
   createMainWindow();
 
   app.on('activate', () => {
