@@ -1,5 +1,7 @@
 // 設定ウィンドウのロジック
-const api = window.api;
+// 注意: `api` は contextBridge が公開している非設定プロパティと衝突するため、
+// ローカル参照は `ipc` にしている
+const ipc = window.api;
 
 const $fontFamily = document.getElementById('font-family');
 const $fontSize = document.getElementById('font-size');
@@ -13,7 +15,7 @@ const $saved = document.getElementById('saved');
 const $consoleLink = document.getElementById('console-link');
 
 async function init() {
-  const cfg = await api.loadConfig();
+  const cfg = await ipc.loadConfig();
 
   // 既存の値に一致する option があれば選択、なければ追加
   if (![...$fontFamily.options].some((o) => o.value === cfg.fontFamily)) {
@@ -47,7 +49,7 @@ $saveBtn.addEventListener('click', async () => {
     apiKey: $apiKey.value.trim(),
     model: $model.value,
   };
-  await api.saveConfig(cfg);
+  await ipc.saveConfig(cfg);
   $saved.classList.add('show');
   setTimeout(() => $saved.classList.remove('show'), 1500);
 });
@@ -56,7 +58,7 @@ $cancelBtn.addEventListener('click', () => window.close());
 
 $consoleLink.addEventListener('click', (e) => {
   e.preventDefault();
-  api.openExternal('https://console.anthropic.com/settings/keys');
+  ipc.openExternal('https://console.anthropic.com/settings/keys');
 });
 
 init();

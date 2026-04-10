@@ -1,6 +1,10 @@
 // Renderer: メインウィンドウのUIロジック
 // - タスク一覧の描画/追加/完了/削除/並び替え
 // - 自然言語入力を Claude に投げて分解
+//
+// 注意: `const api = window.api` と書くと contextBridge が window に
+// non-configurable として公開している 'api' と衝突して SyntaxError になるため、
+// ローカル参照は `ipc` という別名にしている。
 
 console.log('[renderer] script start, window.api =', typeof window.api);
 
@@ -28,8 +32,8 @@ window.addEventListener('unhandledrejection', (e) => {
   );
 });
 
-const api = window.api;
-if (!api) {
+const ipc = window.api;
+if (!ipc) {
   showFatalBanner(
     'preload が読み込まれていません。window.api が undefined です。DevToolsのConsoleタブも確認してください。'
   );
@@ -55,18 +59,18 @@ const $closeBtn = document.getElementById('close-btn');
 
 // ---- 初期化 ----
 async function init() {
-  if (!api) {
-    console.error('[renderer] init aborted: api undefined');
+  if (!ipc) {
+    console.error('[renderer] init aborted: window.api undefined');
     return;
   }
   try {
-    state.config = await api.loadConfig();
+    state.config = await ipc.loadConfig();
     applyConfig(state.config);
 
-    state.tasks = await api.loadTasks();
+    state.tasks = await ipc.loadTasks();
     render();
 
-    api.onConfigUpdated((cfg) => {
+    ipc.onConfigUpdated((cfg) => {
       state.config = cfg;
       applyConfig(cfg);
     });
@@ -216,7 +220,7 @@ async function reorder(fromId, toId) {
 }
 
 async function persist() {
-  await api.saveTasks(state.tasks);
+  await ipc.saveTasks(state.tasks);
 }
 
 // ---- 入力 ----
@@ -233,7 +237,7 @@ async function handleAdd() {
   setStatus('Claude が分解しています…');
 
   try {
-    const result = await api.parseTasks(text);
+    const result = await ipc.parseTasks(text);
     if (!result.ok) {
       setStatus(result.error || '分解に失敗しました', true);
       // キー未設定などのフォールバック: 改行で素朴に分割
@@ -290,20 +294,20 @@ $input.addEventListener('keydown', (e) => {
 $clearDone.addEventListener('click', safeClick('clearDone', clearDone));
 $settingsBtn.addEventListener(
   'click',
-  safeClick('settings', () => api.openSettings())
+  safeClick('settings', () => ipc.openSettings())
 );
 $minimizeBtn.addEventListener(
   'click',
-  safeClick('minimize', () => api.minimizeWindow())
+  safeClick('minimize', () => ipc.minimizeWindow())
 );
 $closeBtn.addEventListener(
   'click',
-  safeClick('close', () => api.closeWindow())
+  safeClick('close', () => ipc.closeWindow())
 );
 $pinBtn.addEventListener(
   'click',
   safeClick('pin', async () => {
-    const pinned = await api.toggleAlwaysOnTop();
+    const pinned = await ipc.toggleAlwaysOnTop();
     $pinBtn.classList.toggle('pinned', pinned);
     $pinBtn.title = pinned ? '常に最前面: ON' : '常に最前面: OFF';
   })
