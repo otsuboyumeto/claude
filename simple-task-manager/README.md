@@ -12,20 +12,43 @@ MacBook 用の、**常に最前面に浮いている手書き風 To-Do** です�
 - **1階層フラット**: 階層なしのシンプルな To-Do。チェック・削除・ドラッグで並び替え・タグ表示。
 - **ローカル保存**: タスクも設定も `~/.simple-tasks/` に JSON で保存。アカウント不要。
 
-## セットアップ
+## クイックスタート (Spotlightから起動できるようにする)
 
-前提: Node.js 18+ が入っていること。
+**初回だけ**、ターミナルで以下を1回実行してください:
+
+```bash
+cd simple-task-manager
+bash install.sh
+```
+
+このスクリプトが以下を全部やります:
+
+1. Homebrew が無ければインストール
+2. Node.js が無ければインストール
+3. `npm install` で依存パッケージを取得
+4. electron-builder で macOS 用 `.app` をビルド
+5. `/Applications/やること.app` に配置
+
+完了したら **Spotlight (⌘+Space) で「やること」と入力** すれば起動できます。
+以後はSpotlightから一発起動で、ターミナルは不要です。
+
+> 初回起動時に「開発元が未確認のため開けません」と出た場合は、
+> Finder で `/Applications/やること.app` を右クリック → 開く → 開く、で許可してください。
+> 一度許可すれば、次からは Spotlight から普通に起動できます。
+
+### API キーの設定
+
+起動後、右上の ⚙ (歯車) アイコンから設定画面を開いて Anthropic API キーを入力してください。
+キーは [console.anthropic.com](https://console.anthropic.com/settings/keys) から取得できます。
+環境変数 `ANTHROPIC_API_KEY` でも動きます。
+
+### 開発モードで動かしたい場合
 
 ```bash
 cd simple-task-manager
 npm install
 npm start
 ```
-
-初回起動したら、右上の ⚙ アイコンから **設定画面** を開いて Anthropic API キーを入れてください。
-キーは [console.anthropic.com](https://console.anthropic.com/settings/keys) から取得できます。
-
-環境変数 `ANTHROPIC_API_KEY` でも動きます。
 
 ## 使い方
 
